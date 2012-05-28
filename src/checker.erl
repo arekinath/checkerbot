@@ -123,9 +123,9 @@ receive_hello(Socket) ->
                 <<"\n", LineRev/binary>> ->
                     Line = binrev(LineRev),
                     case Line of
-                        <<"Hello ", _Rest/binary>> ->
+                        <<"Hello", _Rest/binary>> ->
                             {ok, Line};
-                        <<"hello ", _Rest/binary>> ->
+                        <<"hello", _Rest/binary>> ->
                             {ok, Line};
                         <<"$">> ->
                             {ok, <<"<full>">>};
