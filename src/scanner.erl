@@ -14,17 +14,17 @@ scan_new() ->
     NotExistingPorts = AllPorts -- ExistingPorts,
     lists:foreach(fun(Port) -> checker_pool:add_job(Port) end, NotExistingPorts).
 
+wait(Secs) ->
+    receive
+    after round(Secs) * 1000 ->
+        done
+    end.
+
 loop() ->
-    receive
-    after 10000 ->
-        scan_new()
-    end,
-    receive
-    after 10000 ->
-        scan_existing()
-    end,
-    receive
-    after 10000 ->
-        scan_existing()
-    end,
+    Flong = dist_var:new(30, 10),
+    Fshort = dist_var:new(15, 5),
+    scan_new(), wait(Flong()),
+    scan_existing(), wait(Flong()),
+    scan_existing(), wait(Flong()),
+    scan_existing(), wait(Fshort()),
     loop().
