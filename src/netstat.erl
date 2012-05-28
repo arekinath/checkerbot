@@ -8,7 +8,7 @@ candidates() ->
 run(Cmd, Timeout) ->
     Port = erlang:open_port({spawn, Cmd},[exit_status, binary, {line, 1024}]),
     Result = loop(Port, [], Timeout),
-    erlang:port_close(Port),
+    port_close(Port),
     Result.
 
 loop(Port, Data, Timeout) ->
