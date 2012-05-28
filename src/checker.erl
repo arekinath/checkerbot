@@ -19,17 +19,15 @@ handle_call(_Call, _From, State) ->
     {noreply, State}.
 
 handle_cast({job, Port}, State) ->
-    Players = check_players(Port),
-    HelloLine = check_hello(Port),
 
-    case Players of
+    case check_players(Port) of
         {error, Term} ->
             db:fail_server(Port, Term);
-        _Other ->
-            case HelloLine of
+        {ok, Players} ->
+            case check_hello(Port) of
                 {error, Term} ->
                     db:fail_server(Port, Term);
-                _Other ->
+                {ok, HelloLine} ->
                     db:saw_server(Port, Players, HelloLine)
             end
     end,
@@ -65,8 +63,8 @@ check_players(Port) ->
             case receive_players(Socket) of
                 {error, Term} ->
                     {error, Term};
-                Players ->
-                    Players
+                {ok, Players} ->
+                    {ok, Players}
             end
     end.
 
@@ -91,7 +89,7 @@ receive_players(Socket, Players) ->
             end;
         {tcp_closed, Socket} ->
             gen_tcp:close(Socket),
-            Players
+            {ok, Players}
     after 5000 ->
         {error, timeout}
     end.
@@ -105,8 +103,8 @@ check_hello(Port) ->
             case receive_hello(Socket) of
                 {error, Term} ->
                     {error, Term};
-                HelloLine ->
-                    HelloLine
+                {ok, HelloLine} ->
+                    {ok, HelloLine}
             end
     end.
 
@@ -119,9 +117,9 @@ receive_hello(Socket) ->
                     gen_tcp:close(Socket),
                     case Line of
                         <<"Hello ", _Rest/binary>> ->
-                            Line;
+                            {ok, Line};
                         <<"hello ", _Rest/binary>> ->
-                            Line;
+                            {ok, Line};
                         _Other ->
                             {error, badline}
                     end;
