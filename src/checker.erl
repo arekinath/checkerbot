@@ -54,18 +54,19 @@ connect(Port) ->
     ]).
 
 check_players(Port) ->
-    Result = connect(Port),
-    case Result of
+    case connect(Port) of
         {error, Reason} ->
             {error, Reason};
         {ok, Socket} ->
             gen_tcp:send(Socket, <<"scores\n">>),
-            case receive_players(Socket) of
+            Ret = case receive_players(Socket) of
                 {error, Term} ->
                     {error, Term};
                 {ok, Players} ->
                     {ok, Players}
-            end
+            end,
+            gen_tcp:close(Socket),
+            Ret
     end.
 
 receive_players(Socket) ->
@@ -82,18 +83,14 @@ receive_players(Socket, Players) ->
                         [Name | _Rest] ->
                             receive_players(Socket, [Name | Players]);
                         _Other ->
-                            gen_tcp:close(Socket),
                             {error, badline}
                     end;
                 _Other ->
-                    gen_tcp:close(Socket),
                     {error, badline}
             end;
         {tcp_closed, Socket} ->
-            gen_tcp:close(Socket),
             {ok, Players}
     after 5000 ->
-        gen_tcp:close(Socket),
         {error, timeout}
     end.
 
@@ -103,12 +100,14 @@ check_hello(Port) ->
             {error, Reason};
         {ok, Socket} ->
             gen_tcp:send(Socket, <<"checkerbot\n">>),
-            case receive_hello(Socket) of
+            Ret = case receive_hello(Socket) of
                 {error, Term} ->
                     {error, Term};
                 {ok, HelloLine} ->
                     {ok, HelloLine}
-            end
+            end,
+            gen_tcp:close(Socket),
+            Ret
     end.
 
 receive_hello(Socket) ->
@@ -117,7 +116,6 @@ receive_hello(Socket) ->
             case binrev(Data) of
                 <<"\n", LineRev/binary>> ->
                     Line = binrev(LineRev),
-                    gen_tcp:close(Socket),
                     case Line of
                         <<"Hello ", _Rest/binary>> ->
                             {ok, Line};
@@ -127,14 +125,11 @@ receive_hello(Socket) ->
                             {error, badline}
                     end;
                 _Other ->
-                    gen_tcp:close(Socket),
                     {error, badline}
             end;
         {tcp_closed, Socket} ->
-            gen_tcp:close(Socket),
             {error, closed}
     after 5000 ->
-        gen_tcp:close(Socket),
         {error, timeout}
     end.
 
