@@ -77,6 +77,8 @@ receive_players(Socket, Players) ->
                 <<"\n", LineRev/binary>> ->
                     Line = binrev(LineRev),
                     case binary:split(Line, <<" ">>) of
+                        [<<"checkerbot">> | _Rest] ->
+                            receive_players(Socket, Players);
                         [Name | _Rest] ->
                             receive_players(Socket, [Name | Players]);
                         _Other ->
