@@ -25,6 +25,12 @@ handle_cast({job, Port}, State) ->
             db:fail_server(Port, Term);
         {ok, Players} ->
             case check_hello(Port) of
+                {error, closed} ->
+                    if length(Players) > 0 ->
+                        db:saw_server(Port, Players, <<"no hello for bot :(">>);
+                    true ->
+                        db:fail_server(Port, closed)
+                    end;
                 {error, Term} ->
                     db:fail_server(Port, Term);
                 {ok, HelloLine} ->
@@ -121,6 +127,10 @@ receive_hello(Socket) ->
                             {ok, Line};
                         <<"hello ", _Rest/binary>> ->
                             {ok, Line};
+                        <<"$">> ->
+                            {ok, <<"<full>">>};
+                        <<"$", Rest/binary>> ->
+                            {ok, <<"<full: ", Rest/binary, ">">>};
                         _Other ->
                             {error, badline}
                     end;
