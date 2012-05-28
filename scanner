@@ -1,0 +1,2 @@
+#!/bin/sh
+PATH="$(dirname $0):$PATH" erl -noshell -pa "$(dirname $0)/ebin" -run app start $@
