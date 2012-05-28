@@ -20,15 +20,18 @@ handle_call(_Call, _From, State) ->
 
 handle_cast({job, Port}, State) ->
     Players = check_players(Port),
-    if (Players =/= error) ->
-        HelloLine = check_hello(Port),
-        if (HelloLine =/= error) ->
-            db:saw_server(Port, Players, HelloLine);
-        true ->
-            ok
-        end;
-    true ->
-        ok
+    HelloLine = check_hello(Port),
+
+    case Players of
+        {error, Term} ->
+            db:fail_server(Port, Term);
+        _Other ->
+            case HelloLine of
+                {error, Term} ->
+                    db:fail_server(Port, Term);
+                _Other ->
+                    db:saw_server(Port, Players, HelloLine)
+            end
     end,
 
     checker_pool:checker_ready(),
@@ -56,14 +59,12 @@ check_players(Port) ->
     Result = connect(Port),
     case Result of
         {error, Reason} ->
-            db:fail_server(Port, Reason),
-            error;
+            {error, Reason};
         {ok, Socket} ->
             gen_tcp:send(Socket, <<"scores\n">>),
             case receive_players(Socket) of
                 {error, Term} ->
-                    db:fail_server(Port, Term),
-                    error;
+                    {error, Term};
                 Players ->
                     Players
             end
@@ -98,14 +99,12 @@ receive_players(Socket, Players) ->
 check_hello(Port) ->
     case connect(Port) of
         {error, Reason} ->
-            db:fail_server(Port, Reason),
-            error;
+            {error, Reason};
         {ok, Socket} ->
             gen_tcp:send(Socket, <<"checkerbot\n">>),
             case receive_hello(Socket) of
                 {error, Term} ->
-                    db:fail_server(Port, Term),
-                    error;
+                    {error, Term};
                 HelloLine ->
                     HelloLine
             end
@@ -119,9 +118,9 @@ receive_hello(Socket) ->
                     Line = binrev(LineRev),
                     gen_tcp:close(Socket),
                     case Line of
-                        <<"Hello checkerbot">> ->
+                        <<"Hello ", _Rest/binary>> ->
                             Line;
-                        <<"Hello checkerbot", _Rest/binary>> ->
+                        <<"hello ", _Rest/binary>> ->
                             Line;
                         _Other ->
                             {error, badline}

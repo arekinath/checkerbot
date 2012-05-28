@@ -40,7 +40,9 @@ handle_cast({fail_server, Port, Reason}, State) ->
             end,
             {noreply, NewState};
         _Other ->
-            {noreply, State}
+            When = erlang:localtime(),
+            NewState = dict:store(Port, #server{lastseen=When, players=[], hello= <<"">>, failcount = 1, failreason = Reason}, State),
+            {noreply, NewState}
     end.
 
 handle_info(Msg, State) ->
