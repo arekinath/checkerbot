@@ -7,11 +7,13 @@ candidates() ->
 
 run(Cmd, Timeout) ->
     Port = erlang:open_port({spawn, Cmd},[exit_status, binary, {line, 1024}]),
-    loop(Port, [], Timeout).
-	
+    Result = loop(Port, [], Timeout),
+    erlang:port_close(Port),
+    Result.
+
 loop(Port, Data, Timeout) ->
     receive
-        {Port, {data, {_Flag, Line}}} -> 
+        {Port, {data, {_Flag, Line}}} ->
             Num = case (catch list_to_integer(binary:bin_to_list(Line))) of
                 {'EXIT', _} -> 0;
                 N -> N

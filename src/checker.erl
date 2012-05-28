@@ -93,6 +93,7 @@ receive_players(Socket, Players) ->
             gen_tcp:close(Socket),
             {ok, Players}
     after 5000 ->
+        gen_tcp:close(Socket),
         {error, timeout}
     end.
 
@@ -132,7 +133,8 @@ receive_hello(Socket) ->
         {tcp_closed, Socket} ->
             gen_tcp:close(Socket),
             {error, closed}
-    after 2000 ->
+    after 5000 ->
+        gen_tcp:close(Socket),
         {error, timeout}
     end.
 
