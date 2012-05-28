@@ -33,7 +33,7 @@ handle_cast({fail_server, Port, Reason}, State) ->
     case dict:find(Port, State) of
         {ok, Server} ->
             #server{failcount = FC} = Server,
-            if FC > 5 ->
+            if FC > 10 ->
                 NewState = dict:erase(Port, State);
             true ->
                 NewState = dict:store(Port, Server#server{failcount = FC + 1, failreason = Reason}, State)
