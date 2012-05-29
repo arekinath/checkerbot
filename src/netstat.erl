@@ -16,7 +16,7 @@ loop(Port, Data, Timeout) ->
                 {'EXIT', _} -> 0;
                 N -> N
             end,
-            if (Num > 1024) and (Num < 50000) ->
+            if (Num > 1024) and (Num < 40000) ->
                 loop(Port, [Num | Data], Timeout);
             true ->
                 loop(Port, Data, Timeout)
