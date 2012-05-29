@@ -23,11 +23,12 @@ wait(Secs) ->
     end.
 
 loop() ->
-    Flong = dist_var:new(30, 10),
-    Fshort = dist_var:new(15, 5),
+    loop(dist_var:new(30,10), dist_var:new(15,5)).
+
+loop(Flong, Fshort) ->
     wait(5),
     scan_new(), wait(Flong()),
     scan_existing(), wait(Flong()),
     scan_existing(), wait(Flong()),
     scan_existing(), wait(Fshort()),
-    loop().
+    loop(Flong, Fshort).
